@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- Primary SEO Metadata -->
+    <title>Geosplash | Interactive Kinetic Grid Generator</title>
+    <meta name="description" content="Geosplash is an immersive kinetic grid generator that creates hypnotic, algorithmically-driven visual patterns. Customize geometry, physics, and color palettes to generate unique digital art or 4K wallpapers.">
+    <meta name="keywords" content="Geosplash, kinetic grid, generative art, p5.js, interactive patterns, wallpaper generator, digital art tool, algorithmic design">
+    <link rel="canonical" href="https://pirillo.com/arcade/geosplash.html">
+    <meta name="author" content="Chris Pirillo">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://pirillo.com/arcade/geosplash.html">
+    <meta property="og:title" content="Geosplash | Interactive Kinetic Grid Generator">
+    <meta property="og:description" content="Create hypnotic, generative visual patterns with Geosplash. An interactive tool for digital art and high-resolution wallpaper generation.">
+    <meta property="og:image" content="https://pirillo.com/arcade/images/geosplash.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@ChrisPirillo">
+    <meta name="twitter:creator" content="@ChrisPirillo">
+    <meta name="twitter:url" content="https://pirillo.com/arcade/geosplash.html">
+    <meta name="twitter:title" content="Geosplash | Interactive Kinetic Grid Generator">
+    <meta name="twitter:description" content="Create hypnotic, generative visual patterns with Geosplash. An interactive tool for digital art and high-resolution wallpaper generation.">
+    <meta name="twitter:image" content="https://pirillo.com/arcade/images/geosplash.png">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Geosplash",
+      "url": "https://pirillo.com/arcade/geosplash.html",
+      "description": "An interactive kinetic grid generator for creating generative art and 4K wallpapers.",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Any",
+      "author": {
+        "@type": "Person",
+        "name": "Chris Pirillo",
+        "url": "https://pirillo.com/"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1CQ4D3VQ3L"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-1CQ4D3VQ3L');
+    </script>
+
+    <!-- Performance: Resource Hints -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js" as="script">
+    
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* --- Core Styles --- */
+        body {
+            background-color: #050505;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-display: swap;
+        }
+
+        /* --- Transitions --- */
+        #curtain {
+            pointer-events: none;
+            transition: opacity 0.4s ease-in-out;
+            z-index: 40;
+        }
+
+        /* --- Custom Inputs --- */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #fff;
+            margin-top: -6px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+            transition: transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #333;
+            border-radius: 2px;
+        }
+        input[type=range]:focus { outline: none; }
+        
+        input[type=range]:disabled { opacity: 0.3; cursor: not-allowed; }
+        input[type=range]:disabled::-webkit-slider-thumb { background: #555; box-shadow: none; }
+
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #111; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+
+        .menu-icon line {
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.2s;
+            transform-origin: center;
+            transform-box: fill-box;
+        }
+        
+        .menu-btn[aria-expanded="true"] .line-top { transform: translateY(6px) rotate(45deg); }
+        .menu-btn[aria-expanded="true"] .line-middle { opacity: 0; transform: scaleX(0); }
+        .menu-btn[aria-expanded="true"] .line-bottom { transform: translateY(-6px) rotate(-45deg); }
+
+        .shape-btn.active {
+            background-color: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.5);
+        }
+        .shape-btn svg {
+            fill: currentColor;
+        }
+        .shape-btn {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="text-white">
+
+    <main>
+        <!-- Canvas Container -->
+        <div id="canvas-container" class="absolute inset-0 z-0 cursor-pointer" aria-hidden="true"></div>
+
+        <!-- Black Curtain -->
+        <div id="curtain" class="fixed inset-0 bg-black opacity-0"></div>
+
+        <!-- UI Overlay -->
+        <div class="absolute top-0 left-0 w-full h-full pointer-events-none z-50">
+            
+            <header>
+                <h1 class="sr-only">Geosplash Interactive Grid</h1>
+                <!-- Menu Button -->
+                <button id="menu-btn" class="menu-btn absolute top-6 right-6 w-12 h-12 flex justify-center items-center pointer-events-auto bg-black/40 backdrop-blur-md rounded-full hover:bg-white/10 border border-white/10 transition-colors z-50 shadow-lg group" aria-expanded="false" aria-label="Toggle settings menu">
+                    <svg class="menu-icon w-6 h-6 stroke-white" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line class="line-top" x1="4" y1="6" x2="20" y2="6"></line>
+                        <line class="line-middle" x1="4" y1="12" x2="20" y2="12"></line>
+                        <line class="line-bottom" x1="4" y1="18" x2="20" y2="18"></line>
+                    </svg>
+                </button>
+            </header>
+
+            <!-- Settings Panel -->
+            <nav id="settings-panel" class="absolute top-0 right-0 h-full w-80 bg-[#0a0a0a]/95 backdrop-blur-xl border-l border-white/5 transform translate-x-full transition-transform duration-300 pointer-events-auto flex flex-col shadow-2xl">
+                
+                <!-- Controls Scroll Area -->
+                <div class="flex-1 overflow-y-auto custom-scroll p-6 space-y-8 mt-12">
+                    
+                    <!-- Geometry Group -->
+                    <section class="space-y-4">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Geometry</h3>
+                        
+                        <div id="shape-grid" class="grid grid-cols-5 gap-2 mb-4">
+                            <!-- Buttons injected via JS -->
+                        </div>
+                        
+                        <div class="flex items-center justify-between mb-2 p-2 border border-white/10 rounded bg-white/5">
+                             <label for="inp-stroke" class="text-sm text-gray-300 font-bold">Outline Mode</label>
+                             <input type="checkbox" id="inp-stroke" class="accent-white w-5 h-5 rounded cursor-pointer">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1 text-gray-400"><span>Size</span><span id="val-cellSize" class="font-mono text-xs text-white"></span></div>
+                            <input type="range" id="inp-cellSize" min="15" max="120" step="5" class="w-full" aria-label="Cell Size">
+                        </div>
+                        <div id="container-borderRadius">
+                            <div class="flex justify-between text-sm mb-1 text-gray-400"><span>Roundness</span><span id="val-borderRadius" class="font-mono text-xs text-white"></span></div>
+                            <input type="range" id="inp-borderRadius" min="0" max="50" step="1" class="w-full" aria-label="Border Radius">
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1 text-gray-400"><span>Spacing</span><span id="val-gridMargin" class="font-mono text-xs text-white"></span></div>
+                            <input type="range" id="inp-gridMargin" min="0" max="200" step="10" class="w-full" aria-label="Grid Margin">
+                        </div>
+                    </section>
+
+                    <hr class="border-white/5">
+
+                    <!-- Physics Group -->
+                    <section class="space-y-4">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Physics</h3>
+                        
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="inp-pattern" class="text-sm text-gray-400">Pattern</label>
+                            <select id="inp-pattern" class="bg-black/50 border border-white/20 rounded text-xs px-2 py-1 outline-none text-white focus:border-white/50 w-32 text-right">
+                                <option value="radial">Radial</option>
+                                <option value="linear">Linear</option>
+                                <option value="spiral">Spiral</option>
+                                <option value="diagonal">Diagonal</option>
+                                <option value="interference">Sine Grid</option>
+                                <option value="noise">Noise Field</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1 text-gray-400"><span>Speed</span><span id="val-speed" class="font-mono text-xs text-white"></span></div>
+                            <input type="range" id="inp-speed" min="0.1" max="4.0" step="0.1" class="w-full" aria-label="Animation Speed">
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1 text-gray-400"><span>Frequency</span><span id="val-waveFreq" class="font-mono text-xs text-white"></span></div>
+                            <input type="range" id="inp-waveFreq" min="0.1" max="3.0" step="0.1" class="w-full" aria-label="Wave Frequency">
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1 text-gray-400"><span>Rotation</span><span id="val-rotAmp" class="font-mono text-xs text-white"></span></div>
+                            <input type="range" id="inp-rotAmp" min="0" max="360" step="15" class="w-full" aria-label="Rotation Amplitude">
+                        </div>
+                        
+                        <div class="flex items-center justify-between pt-2">
+                            <label for="inp-mouseInteract" class="text-sm text-gray-300">Mouse Repel</label>
+                            <input type="checkbox" id="inp-mouseInteract" class="accent-white w-4 h-4 rounded cursor-pointer">
+                        </div>
+                    </section>
+
+                    <hr class="border-white/5">
+
+                    <!-- Style Group -->
+                    <section class="space-y-4">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Style</h3>
+                        
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="inp-colorMode" class="text-sm text-gray-400">Mode</label>
+                            <select id="inp-colorMode" class="bg-black/50 border border-white/20 rounded text-xs px-2 py-1 outline-none text-white focus:border-white/50 w-32 text-right">
+                                <option value="chaos">★ Pure Chaos</option>
+                                <option value="algo">Algorithm (RGB)</option>
+                                <option value="spectrum">Spectrum (HSB)</option>
+                                <option value="synth">Synthwave</option>
+                                <option value="ocean">Ocean</option>
+                                <option value="forest">Forest</option>
+                                <option value="sunset">Sunset</option>
+                                <option value="plasma">Plasma</option>
+                                <option value="gold">Golden</option>
+                                <option value="cotton">Cotton Candy</option>
+                                <option value="thermal">Thermal</option>
+                                <option value="matrix">Matrix</option>
+                                <option value="mono">Monochrome</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-center justify-between mb-2">
+                             <label for="inp-bgColor" class="text-sm text-gray-400">Background</label>
+                             <input type="color" id="inp-bgColor" value="#050505" class="w-8 h-8 rounded cursor-pointer bg-transparent border-none" aria-label="Background Color">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1 text-gray-400"><span>Base Hue</span><span id="val-baseHue" class="font-mono text-xs text-white"></span></div>
+                            <input type="range" id="inp-baseHue" min="0" max="360" step="1" class="w-full" aria-label="Base Hue">
+                        </div>
+                         <div>
+                            <div class="flex justify-between text-sm mb-1 text-gray-400"><span>Cycle Speed</span><span id="val-hueSpeed" class="font-mono text-xs text-white"></span></div>
+                            <input type="range" id="inp-hueSpeed" min="0" max="4" step="0.1" class="w-full" aria-label="Hue Cycling Speed">
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1 text-gray-400"><span>Opacity</span><span id="val-opacity" class="font-mono text-xs text-white"></span></div>
+                            <input type="range" id="inp-opacity" min="20" max="255" step="5" class="w-full" aria-label="Shape Opacity">
+                        </div>
+                    </section>
+
+                    <!-- Auto -->
+                     <section class="p-3 border border-white/10 rounded bg-white/5">
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="inp-autoAdvance" class="text-xs font-bold text-gray-400 uppercase">Auto-Advance</label>
+                            <input type="checkbox" id="inp-autoAdvance" class="accent-white w-4 h-4">
+                        </div>
+                        <input type="range" id="inp-autoInterval" min="3" max="60" step="1" class="w-full" aria-label="Auto-Advance Interval">
+                        <div class="flex justify-between text-[10px] text-gray-500 mt-1">
+                            <span>3s</span>
+                            <span id="val-autoInterval"></span>
+                            <span>60s</span>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Footer -->
+                <footer class="p-6 border-t border-white/10 bg-black space-y-3">
+                    <button id="btn-randomize" class="w-full py-3 bg-white text-black font-bold text-sm uppercase tracking-wide rounded hover:bg-gray-200 transition-colors shadow-lg">
+                        Randomize
+                    </button>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="btn-reset" class="py-2 border border-white/20 text-white/70 text-xs uppercase tracking-wide rounded hover:bg-white/10 hover:text-white transition-colors">
+                            Reset
+                        </button>
+                        <button id="btn-export" class="py-2 border border-white/20 text-white/70 text-xs uppercase tracking-wide rounded hover:bg-white/10 hover:text-white transition-colors">
+                            Save 4K
+                        </button>
+                    </div>
+                </footer>
+            </nav>
+        </div>
+
+        <!-- Toast -->
+        <div id="toast" role="status" aria-live="polite" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur text-black px-6 py-3 rounded-full text-sm font-semibold opacity-0 transition-opacity duration-300 pointer-events-none z-50 shadow-xl border border-white/20">
+            Action Completed
+        </div>
+    </main>
+
+    <script>
+        /**
+         * GEOSPLASH - SCRIPT LOGIC
+         * Note: Core logic maintained to preserve production behavior.
+         */
+        const config = {
+            shape: 'square', 
+            pattern: 'radial', 
+            colorMode: 'chaos', 
+            cellSize: 40,
+            borderRadius: 4,
+            gridMargin: 40,
+            speed: 1.0,
+            waveFreq: 0.5,
+            rotAmp: 45,
+            baseHue: 0,
+            hueSpeed: 1.0,
+            opacity: 200,
+            mouseInteract: false,
+            autoAdvance: false,
+            autoInterval: 10,
+            bg: '#050505',
+            chaosSeed: [1, 0, 1, 0, 1, 0], 
+            chaosRange: [[0,255],[0,255],[0,255]], 
+            stroke: false,
+            strokeWeight: 2
+        };
+
+        const defaults = { ...config };
+        let isMenuOpen = false;
+        let lastAutoTime = 0;
+        let cols, rows;
+        let ui; 
+        let colorOffsets = { r: 0, g: 0, b: 0 }; 
+
+        function setup() {
+            let canvas = createCanvas(windowWidth, windowHeight);
+            canvas.parent('canvas-container');
+            rectMode(CENTER);
+            angleMode(DEGREES);
+            initUI();
+            randomizeParams(false); 
+            calculateGrid();
+            syncUI();
+        }
+
+        function draw() {
+            if (config.autoAdvance && millis() - lastAutoTime > config.autoInterval * 1000) {
+                triggerTransition();
+                lastAutoTime = millis();
+            }
+
+            background(config.bg);
+            let time = millis() * 0.05 * config.speed;
+            translate(width / 2, height / 2);
+            let xOffset = (cols * config.cellSize) / 2;
+            let yOffset = (rows * config.cellSize) / 2;
+
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    push();
+                    let x = i * config.cellSize - xOffset + config.cellSize / 2;
+                    let y = j * config.cellSize - yOffset + config.cellSize / 2;
+                    if (config.mouseInteract && !isMenuOpen) {
+                        let mx = mouseX - width/2;
+                        let my = mouseY - height/2;
+                        let dMouse = dist(x, y, mx, my);
+                        if (dMouse < 300) {
+                            let force = map(dMouse, 0, 300, 1, 0);
+                            let angMouse = atan2(y - my, x - mx);
+                            let pushDist = force * 60;
+                            x += cos(angMouse) * pushDist;
+                            y += sin(angMouse) * pushDist;
+                        }
+                    }
+                    translate(x, y);
+                    let waveVal = 0;
+                    if (config.pattern === 'radial') waveVal = dist(x, y, 0, 0) * config.waveFreq;
+                    else if (config.pattern === 'linear') waveVal = x * config.waveFreq;
+                    else if (config.pattern === 'diagonal') waveVal = (x + y) * config.waveFreq;
+                    else if (config.pattern === 'spiral') waveVal = (dist(x,y,0,0) + atan2(y,x) * 20) * (config.waveFreq * 0.5);
+                    else if (config.pattern === 'interference') waveVal = (sin(x * config.waveFreq) + sin(y * config.waveFreq)) * 100;
+                    else if (config.pattern === 'noise') waveVal = noise(x * 0.01 * config.waveFreq, y * 0.01 * config.waveFreq, time * 0.01) * 720;
+                    let angle = sin(waveVal - time) * config.rotAmp;
+                    if (config.pattern === 'noise') angle = (waveVal % 360);
+                    rotate(angle);
+                    let c = getStrategicColor(config.colorMode, waveVal, time, angle);
+                    if (config.stroke || config.shape === 'ring') {
+                        c.setAlpha(config.opacity);
+                        stroke(c); 
+                        strokeWeight(config.strokeWeight);
+                        noFill();
+                    } else {
+                        noStroke();
+                        c.setAlpha(config.opacity);
+                        fill(c);
+                    }
+                    let scaleVal = map(cos(waveVal * 0.02 - time), -1, 1, 0.4, 0.95);
+                    scale(scaleVal);
+                    drawShape(config.shape, config.cellSize, config.borderRadius);
+                    pop();
+                }
+            }
+        }
+
+        function drawShape(type, size, radius) {
+            if (type === 'square') rect(0, 0, size, size, radius);
+            else if (type === 'circle') ellipse(0, 0, size, size);
+            else if (type === 'triangle') { let h = size * 0.866; triangle(0, -h/2, -size/2, h/2, size/2, h/2); }
+            else if (type === 'cross') { let t = size / 3; rect(0, 0, size, t, radius); rect(0, 0, t, size, radius); }
+            else if (type === 'diamond') { let w = size * 0.6; let h = size * 1.0; quad(0, -h/2, w/2, 0, 0, h/2, -w/2, 0); }
+            else if (type === 'pentagon') drawPolygon(5, size/2);
+            else if (type === 'hexagon') drawPolygon(6, size/2);
+            else if (type === 'star') drawStar(0, 0, size/2, size/4, 5);
+            else if (type === 'heart') drawHeart(0, 0, size);
+            else if (type === 'ring') ellipse(0,0, size * 0.8, size * 0.8);
+        }
+
+        function drawPolygon(n, radius) {
+            beginShape();
+            for (let i = 0; i < n; i++) {
+                let ang = 360 / n * i - 90;
+                vertex(cos(ang) * radius, sin(ang) * radius);
+            }
+            endShape(CLOSE);
+        }
+
+        function drawStar(x, y, radius1, radius2, npoints) {
+            let angle = 360 / npoints;
+            let halfAngle = angle / 2.0;
+            beginShape();
+            for (let a = -90; a < 270; a += angle) {
+                let sx = x + cos(a) * radius1;
+                let sy = y + sin(a) * radius1;
+                vertex(sx, sy);
+                sx = x + cos(a + halfAngle) * radius2;
+                sy = y + sin(a + halfAngle) * radius2;
+                vertex(sx, sy);
+            }
+            endShape(CLOSE);
+        }
+
+        function drawHeart(x, y, size) {
+            beginShape();
+            for (let a = 0; a < 360; a+=5) {
+                let r = size/40; 
+                let xh = r * 16 * pow(sin(a), 3);
+                let yh = -r * (13 * cos(a) - 5 * cos(2*a) - 2 * cos(3*a) - cos(4*a));
+                vertex(x + xh, y + yh);
+            }
+            endShape(CLOSE);
+        }
+
+        function getStrategicColor(mode, val, t, ang) {
+            let tSpeed = t * config.hueSpeed;
+            let hueShift = tSpeed;
+            let input = val * 0.01; 
+            let baseShift = config.baseHue;
+            colorMode(RGB);
+            let r, g, b;
+
+            if (mode === 'chaos') {
+                r = map(sin(val * config.chaosSeed[0] + tSpeed + config.chaosSeed[1]), -1, 1, config.chaosRange[0][0], config.chaosRange[0][1]);
+                g = map(cos(val * config.chaosSeed[2] - tSpeed + config.chaosSeed[3]), -1, 1, config.chaosRange[1][0], config.chaosRange[1][1]);
+                b = map(sin(ang * config.chaosSeed[4] + config.chaosSeed[5]), -1, 1, config.chaosRange[2][0], config.chaosRange[2][1]);
+            } else if (mode === 'algo') {
+                r = map(sin(input - tSpeed * 0.1 + colorOffsets.r), -1, 1, 50, 255);
+                g = map(cos(input * 0.5 - tSpeed * 0.15 + colorOffsets.g), -1, 1, 100, 200 + (hueShift % 100));
+                b = map(sin(ang + colorOffsets.b), -1, 1, 150, 255);
+            } else if (mode === 'spectrum') {
+                colorMode(HSB, 360, 100, 100);
+                let h = (val + hueShift * 2 + baseShift) % 360;
+                return color(h, 80, 100);
+            } else if (mode === 'synth') {
+                r = map(sin(input - tSpeed * 0.2), -1, 1, 40, 255);
+                g = map(cos(input + tSpeed), -1, 1, 0, 100);
+                b = map(sin(ang), -1, 1, 180, 255);
+            } else if (mode === 'ocean') {
+                r = map(sin(input), -1, 1, 0, 50);
+                g = map(cos(input - tSpeed * 0.1), -1, 1, 100, 200);
+                b = map(sin(ang - tSpeed), -1, 1, 180, 255);
+            } else if (mode === 'forest') {
+                r = map(sin(input + tSpeed), -1, 1, 20, 100);
+                g = map(cos(input - tSpeed * 0.1), -1, 1, 100, 220);
+                b = map(sin(ang), -1, 1, 20, 80);
+            } else if (mode === 'sunset') {
+                r = map(sin(input - tSpeed * 0.1), -1, 1, 255, 100);
+                g = map(cos(input * 0.5), -1, 1, 50, 150);
+                b = map(sin(ang + tSpeed), -1, 1, 50, 200);
+            } else if (mode === 'plasma') {
+                r = map(sin(input * 5 - tSpeed), -1, 1, 0, 255);
+                g = map(sin(input * 3 + tSpeed), -1, 1, 0, 255);
+                b = map(sin(input * 2 + ang), -1, 1, 0, 255);
+            } else if (mode === 'gold') {
+                r = map(sin(input - tSpeed * 0.1), -1, 1, 200, 255);
+                g = map(cos(input - tSpeed * 0.1), -1, 1, 150, 220);
+                b = map(sin(ang), -1, 1, 0, 50);
+            } else if (mode === 'cotton') {
+                r = map(sin(input - tSpeed * 0.1), -1, 1, 200, 255);
+                g = map(cos(input * 0.5), -1, 1, 180, 240);
+                b = map(sin(ang + tSpeed), -1, 1, 220, 255);
+            } else if (mode === 'thermal') {
+                r = map(sin(input - tSpeed * 0.1), -1, 1, 255, 0);
+                g = map(sin(input - tSpeed * 0.1 + 90), -1, 1, 255, 0);
+                b = map(sin(input - tSpeed * 0.1 + 180), -1, 1, 50, 0);
+            } else if (mode === 'matrix') {
+                r = 0; g = map(sin(input - tSpeed * 2 + ang), -1, 1, 50, 255); b = map(sin(input), -1, 1, 0, 50);
+            } else if (mode === 'mono') {
+                let bright = map(sin(input - tSpeed), -1, 1, 40, 240); r=g=b=bright;
+            } else r=g=b=255;
+
+            if (baseShift > 0 && mode !== 'spectrum') {
+                colorMode(HSB);
+                let c = color(r,g,b);
+                return color((hue(c) + baseShift) % 360, saturation(c), brightness(c));
+            }
+            return color(r, g, b);
+        }
+
+        function initUI() {
+            ui = {
+                menuBtn: document.getElementById('menu-btn'),
+                panel: document.getElementById('settings-panel'),
+                curtain: document.getElementById('curtain'),
+                toast: document.getElementById('toast'),
+                shapeGrid: document.getElementById('shape-grid'),
+                inputs: {
+                    cellSize: document.getElementById('inp-cellSize'),
+                    borderRadius: document.getElementById('inp-borderRadius'),
+                    gridMargin: document.getElementById('inp-gridMargin'),
+                    speed: document.getElementById('inp-speed'),
+                    waveFreq: document.getElementById('inp-waveFreq'),
+                    rotAmp: document.getElementById('inp-rotAmp'),
+                    baseHue: document.getElementById('inp-baseHue'),
+                    hueSpeed: document.getElementById('inp-hueSpeed'),
+                    opacity: document.getElementById('inp-opacity'),
+                    autoInterval: document.getElementById('inp-autoInterval'),
+                    pattern: document.getElementById('inp-pattern'),
+                    colorMode: document.getElementById('inp-colorMode'),
+                    mouseInteract: document.getElementById('inp-mouseInteract'),
+                    autoAdvance: document.getElementById('inp-autoAdvance'),
+                    bgColor: document.getElementById('inp-bgColor'),
+                    stroke: document.getElementById('inp-stroke')
+                },
+                labels: {
+                    cellSize: document.getElementById('val-cellSize'),
+                    borderRadius: document.getElementById('val-borderRadius'),
+                    gridMargin: document.getElementById('val-gridMargin'),
+                    speed: document.getElementById('val-speed'),
+                    waveFreq: document.getElementById('val-waveFreq'),
+                    rotAmp: document.getElementById('val-rotAmp'),
+                    hueSpeed: document.getElementById('val-hueSpeed'),
+                    baseHue: document.getElementById('val-baseHue'),
+                    opacity: document.getElementById('val-opacity'),
+                    autoInterval: document.getElementById('val-autoInterval')
+                },
+                btns: {
+                    randomize: document.getElementById('btn-randomize'),
+                    reset: document.getElementById('btn-reset'),
+                    export: document.getElementById('btn-export')
+                }
+            };
+
+            const icons = {
+                square: '<rect x="6" y="6" width="12" height="12" rx="1" />',
+                circle: '<circle cx="12" cy="12" r="6" />',
+                triangle: '<polygon points="12,6 18,17 6,17" />',
+                cross: '<path d="M10 4h4v6h6v4h-6v6h-4v-6h-6v-4h6z" />',
+                diamond: '<path d="M12 4 L18 12 L12 20 L6 12 Z" />',
+                pentagon: '<polygon points="12,4 19.6,9.5 16.7,18 7.3,18 4.4,9.5" transform="scale(0.8 0.8) translate(3 3)"/>',
+                hexagon: '<polygon points="12,2 20.66,7 20.66,17 12,22 3.34,17 3.34,7" transform="scale(0.65 0.65) translate(6 6)"/>',
+                star: '<polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9" transform="scale(0.7 0.7) translate(5 5)"/>',
+                heart: '<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" transform="scale(0.6 0.6) translate(8 8)"/>',
+                ring: '<circle cx="12" cy="12" r="6" stroke-width="2" stroke="currentColor" fill="none"/>'
+            };
+
+            for(let s in icons) {
+                const btn = document.createElement('button');
+                btn.className = 'shape-btn flex justify-center items-center py-2 rounded border border-white/20 hover:bg-white/10 transition-colors w-full h-10';
+                btn.dataset.shape = s;
+                btn.innerHTML = `<svg viewBox="0 0 24 24" class="w-5 h-5">${icons[s]}</svg>`;
+                btn.title = s.charAt(0).toUpperCase() + s.slice(1);
+                btn.setAttribute('aria-label', s);
+                btn.addEventListener('click', (e) => {
+                    config.shape = e.currentTarget.dataset.shape;
+                    updateShapeBtns();
+                    handleRoundnessState();
+                });
+                ui.shapeGrid.appendChild(btn);
+            }
+
+            ui.menuBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(); });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isMenuOpen) closeMenu(); });
+            document.addEventListener('click', (e) => {
+                if (isMenuOpen && !ui.panel.contains(e.target) && !ui.menuBtn.contains(e.target)) closeMenu();
+                else if (!isMenuOpen && !e.target.closest('#menu-btn') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'SELECT') {
+                    triggerTransition();
+                }
+            });
+
+            ui.btns.randomize.addEventListener('click', () => triggerTransition());
+            ui.btns.reset.addEventListener('click', resetDefaults);
+            ui.btns.export.addEventListener('click', exportWallpaper);
+
+            for(let key in ui.inputs) {
+                let el = ui.inputs[key];
+                el.addEventListener(el.type === 'checkbox' ? 'change' : 'input', (e) => {
+                    let val = el.type === 'checkbox' ? el.checked : e.target.value;
+                    if(el.type !== 'checkbox' && el.type !== 'color' && !isNaN(parseFloat(val))) val = parseFloat(val);
+                    config[key] = val;
+                    if(ui.labels[key]) ui.labels[key].innerText = val;
+                    if(key === 'cellSize' || key === 'gridMargin') calculateGrid();
+                    if(key === 'autoInterval') lastAutoTime = millis();
+                    if(key === 'bgColor') { config.bg = e.target.value; }
+                });
+            }
+        }
+
+        function handleRoundnessState() {
+            const supportRound = ['square', 'cross'];
+            const disabled = !supportRound.includes(config.shape);
+            ui.inputs.borderRadius.disabled = disabled;
+            document.getElementById('container-borderRadius').style.opacity = disabled ? '0.3' : '1';
+        }
+
+        function updateShapeBtns() {
+            document.querySelectorAll('.shape-btn').forEach(btn => {
+                if(btn.dataset.shape === config.shape) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        }
+
+        function calculateGrid() {
+            cols = floor((width - config.gridMargin * 2) / config.cellSize);
+            rows = floor((height - config.gridMargin * 2) / config.cellSize);
+        }
+        function windowResized() { resizeCanvas(windowWidth, windowHeight); calculateGrid(); }
+
+        function toggleMenu() {
+            isMenuOpen = !isMenuOpen;
+            ui.menuBtn.setAttribute('aria-expanded', isMenuOpen);
+            ui.panel.classList.toggle('translate-x-full', !isMenuOpen);
+        }
+        function closeMenu() {
+            isMenuOpen = false;
+            ui.menuBtn.setAttribute('aria-expanded', false);
+            ui.panel.classList.add('translate-x-full');
+        }
+
+        function triggerTransition() {
+            ui.curtain.style.opacity = '1';
+            setTimeout(() => {
+                randomizeParams(true);
+                calculateGrid();
+                ui.curtain.style.opacity = '0';
+            }, 450);
+        }
+
+        function randomizeParams(keepSystem) {
+            const rnd = (min, max) => Math.random() * (max - min) + min;
+            const shapes = ['square', 'circle', 'triangle', 'cross', 'diamond', 'pentagon', 'hexagon', 'star', 'heart', 'ring'];
+            config.shape = shapes[Math.floor(Math.random() * shapes.length)];
+            const patterns = ['radial', 'linear', 'diagonal', 'spiral', 'interference', 'noise'];
+            config.pattern = patterns[Math.floor(Math.random() * patterns.length)];
+            let mood = Math.random();
+            let baseFreq = rnd(0.1, 1.2);
+            let newBg;
+
+            if (mood < 0.25) { 
+                config.chaosSeed = [baseFreq, rnd(0, 360), baseFreq, rnd(0, 360), baseFreq, rnd(0, 360)];
+                let rBase = rnd(0, 255), gBase = rnd(0, 255), bBase = rnd(0, 255);
+                config.chaosRange = [
+                    [Math.max(0, rBase - 80), Math.min(255, rBase + 80)], 
+                    [Math.max(0, gBase - 80), Math.min(255, gBase + 80)], 
+                    [Math.max(0, bBase - 80), Math.min(255, bBase + 80)]
+                ];
+                newBg = Math.random() > 0.5 ? `rgb(${Math.max(0, rBase-200)}, ${Math.max(0, gBase-200)}, ${Math.max(0, bBase-200)})` : `rgb(${rnd(0,100)}, ${rnd(0,100)}, ${rnd(0,100)})`;
+            } else if (mood < 0.5) {
+                config.chaosSeed = [baseFreq, rnd(0, 360), baseFreq * 2, rnd(0, 360), baseFreq * 0.5, rnd(0, 360)];
+                config.chaosRange = [[0, 255], [0, 255], [0, 255]];
+                newBg = Math.random() > 0.5 ? '#101010' : `rgb(${Math.floor(rnd(20, 150))}, ${Math.floor(rnd(20, 150))}, ${Math.floor(rnd(20, 150))})`;
+            } else if (mood < 0.75) {
+                 config.chaosSeed = [baseFreq, rnd(0, 360), baseFreq, rnd(0, 360), baseFreq, rnd(0, 360)];
+                 config.chaosRange = [[150, 255], [150, 255], [150, 255]];
+                 newBg = Math.random() > 0.5 ? `rgb(${Math.floor(rnd(220,255))},${Math.floor(rnd(220,255))},${Math.floor(rnd(220,255))})` : `rgb(${Math.floor(rnd(40,80))},${Math.floor(rnd(40,80))},${Math.floor(rnd(60,100))})`;
+            } else {
+                config.chaosSeed = [rnd(0.1, 1.5), rnd(0, 360), rnd(0.1, 1.5), rnd(0, 360), rnd(0.1, 1.5), rnd(0, 360)];
+                config.chaosRange = [[0, 255], [0, 255], [0, 255]];
+                newBg = `rgb(${Math.floor(rnd(0,255))},${Math.floor(rnd(0,255))},${Math.floor(rnd(0,255))})`;
+            }
+
+            let tempC = color(newBg);
+            config.bg = '#' + hex(red(tempC),2) + hex(green(tempC),2) + hex(blue(tempC),2);
+            config.stroke = Math.random() > 0.6;
+            config.strokeWeight = rnd(0.5, 3);
+            config.baseHue = floor(rnd(0, 360));
+            colorOffsets.r = rnd(0, 100); colorOffsets.g = rnd(0, 100); colorOffsets.b = rnd(0, 100);
+
+            if (Math.random() > 0.2) config.colorMode = 'chaos';
+            else {
+                const cModes = ['algo', 'spectrum', 'synth', 'ocean', 'forest', 'sunset', 'plasma', 'gold', 'cotton', 'thermal', 'matrix', 'mono'];
+                config.colorMode = cModes[Math.floor(Math.random() * cModes.length)];
+            }
+            config.cellSize = Math.floor(rnd(20, 80));
+            config.borderRadius = Math.floor(rnd(0, config.cellSize/2));
+            config.speed = rnd(0.5, 3.0);
+            config.waveFreq = rnd(0.2, 1.5);
+            config.rotAmp = rnd(20, 180);
+            config.hueSpeed = rnd(0.5, 3.0);
+            config.opacity = Math.floor(rnd(150, 255));
+
+            if (!keepSystem) { config.autoAdvance = false; config.mouseInteract = false; }
+            syncUI(); updateShapeBtns(); handleRoundnessState(); lastAutoTime = millis();
+        }
+
+        function resetDefaults() {
+            Object.assign(config, defaults);
+            syncUI(); updateShapeBtns(); handleRoundnessState(); calculateGrid();
+            showToast('Reset Complete');
+        }
+
+        function syncUI() {
+            for(let key in ui.inputs) {
+                let el = ui.inputs[key];
+                if(el.type === 'checkbox') el.checked = config[key];
+                else el.value = config[key];
+                if(ui.labels[key]) ui.labels[key].innerText = config[key];
+            }
+        }
+
+        function showToast(msg) {
+            ui.toast.innerText = msg;
+            ui.toast.style.opacity = '1';
+            setTimeout(() => { ui.toast.style.opacity = '0'; }, 2000);
+        }
+
+        function exportWallpaper() {
+            let pg = createGraphics(3840, 2160);
+            pg.rectMode(CENTER); pg.angleMode(DEGREES); pg.noStroke(); pg.background(config.bg);
+            let kCols = floor((3840 - config.gridMargin * 2) / config.cellSize);
+            let kRows = floor((2160 - config.gridMargin * 2) / config.cellSize);
+            let time = millis() * 0.05 * config.speed;
+            pg.translate(3840/2, 2160/2);
+            let xOffset = (kCols * config.cellSize) / 2;
+            let yOffset = (kRows * config.cellSize) / 2;
+
+            for (let i = 0; i < kCols; i++) {
+                for (let j = 0; j < kRows; j++) {
+                    pg.push();
+                    let x = i * config.cellSize - xOffset + config.cellSize / 2;
+                    let y = j * config.cellSize - yOffset + config.cellSize / 2;
+                    pg.translate(x, y);
+                    let waveVal = 0;
+                    if (config.pattern === 'radial') waveVal = dist(x, y, 0, 0) * config.waveFreq;
+                    else if (config.pattern === 'linear') waveVal = x * config.waveFreq;
+                    else if (config.pattern === 'diagonal') waveVal = (x + y) * config.waveFreq;
+                    else if (config.pattern === 'spiral') waveVal = (dist(x,y,0,0) + atan2(y,x) * 20) * (config.waveFreq * 0.5);
+                    else if (config.pattern === 'interference') waveVal = (sin(x * config.waveFreq) + sin(y * config.waveFreq)) * 100;
+                    else if (config.pattern === 'noise') waveVal = noise(x * 0.01 * config.waveFreq, y * 0.01 * config.waveFreq, time * 0.01) * 720;
+                    let angle = sin(waveVal - time) * config.rotAmp;
+                    if (config.pattern === 'noise') angle = (waveVal % 360);
+                    pg.rotate(angle);
+                    let c = getStrategicColor(config.colorMode, waveVal, time, angle);
+                    if (config.stroke || config.shape === 'ring') {
+                         c.setAlpha(config.opacity); pg.stroke(c); pg.strokeWeight(config.strokeWeight); pg.noFill();
+                    } else {
+                         pg.noStroke(); c.setAlpha(config.opacity); pg.fill(c);
+                    }
+                    let scaleVal = map(cos(waveVal * 0.02 - time), -1, 1, 0.4, 0.95); pg.scale(scaleVal);
+                    
+                    if (config.shape === 'square') pg.rect(0, 0, config.cellSize, config.cellSize, config.borderRadius);
+                    else if (config.shape === 'circle') pg.ellipse(0, 0, config.cellSize, config.cellSize);
+                    else if (config.shape === 'triangle') { let h = config.cellSize * 0.866; pg.triangle(0, -h/2, -config.cellSize/2, h/2, config.cellSize/2, h/2); }
+                    else if (config.shape === 'cross') { let t = config.cellSize / 3; pg.rect(0, 0, config.cellSize, t, config.borderRadius); pg.rect(0, 0, t, config.cellSize, config.borderRadius); }
+                    else if (config.shape === 'diamond') { let w = config.cellSize * 0.6; let h = config.cellSize * 1.0; pg.quad(0, -h/2, w/2, 0, 0, h/2, -w/2, 0); }
+                    else if (config.shape === 'pentagon') { pg.beginShape(); for(let k=0;k<5;k++) { let ang=360/5*k-90; pg.vertex(cos(ang)*config.cellSize/2, sin(ang)*config.cellSize/2); } pg.endShape(CLOSE); }
+                    else if (config.shape === 'hexagon') { pg.beginShape(); for(let k=0;k<6;k++) { let ang=360/6*k-90; pg.vertex(cos(ang)*config.cellSize/2, sin(ang)*config.cellSize/2); } pg.endShape(CLOSE); }
+                    else if (config.shape === 'star') { let angle = 360 / 5; let halfAngle = angle/2.0; pg.beginShape(); for(let a=-90; a<270; a+=angle) { pg.vertex(cos(a)*config.cellSize/2, sin(a)*config.cellSize/2); pg.vertex(cos(a+halfAngle)*config.cellSize/4, sin(a+halfAngle)*config.cellSize/4); } pg.endShape(CLOSE); }
+                    else if (config.shape === 'heart') { pg.beginShape(); for (let a = 0; a < 360; a+=5) { let r = config.cellSize/40; let xh = r * 16 * pow(sin(a), 3); let yh = -r * (13 * cos(a) - 5 * cos(2*a) - 2 * cos(3*a) - cos(4*a)); pg.vertex(xh, yh); } pg.endShape(CLOSE); }
+                    else if (config.shape === 'ring') pg.ellipse(0,0, config.cellSize * 0.8, config.cellSize * 0.8);
+                    pg.pop();
+                }
+            }
+            save(pg, `geosplash-${Date.now()}.png`);
+            pg.remove();
+            showToast('4K Export Downloaded');
+        }
+    </script>
+</body>
+</html>
